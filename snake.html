@@ -1,0 +1,173 @@
+<head>
+    <title>Snake</title>
+</head>
+
+<body>
+
+<div id="score">0</div>
+<canvas id="snaketable" width="600" height="600" ></canvas>
+
+<style>
+    #snaketable {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #score {
+        text-align: left;
+        margin-top: 30px;
+        margin-left: 300px;
+        font-size: 80px;
+    }
+</style>
+</body>
+
+<script>
+
+    const tableBorder = 'black'
+    const tableBackground = 'lightgrey'
+    const snakeColor = 'darkgrey'
+    const snakeBorder = 'darkblue'
+
+    let snake = [
+     {x:200, y:200},
+     {x:190, y:200},
+     {x:180, y:200},
+     {x:170, y:200},
+     {x:160, y:200}
+    ]
+
+    let score = 0
+    let directionChange = false
+    let dx = 10
+    let dy = 0
+    let food_x;
+    let food_y;
+    let loser;
+
+    const snaketable = document.getElementById('snaketable')
+    const context = snaketable.getContext('2d')
+
+    main()
+
+    foodGen()
+
+    document.addEventListener('keydown', directionChangeFunc)
+
+    function main() {
+        if (endGame()) {
+            
+            alert (`Você perdeu! Sua pontuação foi: ${score}`)
+            return
+
+        };
+        directionChange = false;
+        setTimeout(function onTick() {    
+            clear();
+            drawFood();    
+            move();  
+            drawSnake();
+            main();
+        }, 100)
+    }
+
+    function clear() {
+        context.fillStyle = tableBackground
+        context.strokeStyle = tableBorder
+        context.fillRect(0, 0, snaketable.width, snaketable.height)
+        context.strokeRect(0, 0, snaketable.width, snaketable.height)
+    }
+
+    function drawSnake() {
+        snake.forEach(drawSnakePart)
+    }
+
+    function drawFood() {
+        context.fillStyle = 'darkgreen'
+        context.fillRect(food_x, food_y, 10, 10)
+        context.fillStroke = 'black'
+        context.strokeRect(food_x, food_y, 10, 10)
+    }
+
+    function drawSnakePart(snakePart) {
+        context.fillStyle = snakeColor
+        context.strokestyle = snakeBorder
+        context.fillRect(snakePart.x, snakePart.y, 10, 10)
+        context.strokeRect(snakePart.x, snakePart.y, 10, 10)
+    }
+
+    function endGame() {
+        for(let i = 4; i < snake.length; i++) {
+            if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true
+        }
+        const hitLeft = snake[0].x < 0
+        const hitRight = snake[0].x > snaketable.width - 10
+        const hitTop = snake[0].y < 0
+        const hitBot = snake[0].y > snaketable.height - 10
+        return hitLeft || hitRight || hitTop || hitBot
+    }
+
+    function directionChangeFunc(e) {
+        const LEFT_ARROW = 37
+        const RIGHT_ARROW = 39
+        const UP_ARROW = 38
+        const DOWN_ARROW = 40
+
+        if (directionChange) return
+        directionChange = true
+        const keyPressed = e.keyCode
+        const goingUp = dy === -10
+        const goingDown = dy === 10
+        const goingRight = dx === 10
+        const goingLeft = dx === -10
+
+        if(keyPressed === LEFT_ARROW && !goingRight) {
+            dx = -10
+            dy = 0
+        }
+
+        if(keyPressed === UP_ARROW && !goingDown) {
+            dx = 0
+            dy = -10
+        }
+
+        if(keyPressed === RIGHT_ARROW && !goingLeft) {
+            dx = 10
+            dy = 0
+        }
+
+        if(keyPressed === DOWN_ARROW && !goingUp) {
+            dx = 0
+            dy = 10
+        }
+    }
+
+    function foodRandom(min, max) {
+        return Math.round((Math.random() * (max-min) + min) / 10) * 10
+    }
+
+    function foodGen() {
+        food_x = foodRandom(0, snaketable.width - 10)
+        food_y = foodRandom(0, snaketable.height - 10)
+        snake.forEach(function snakeEatenFood(part) {
+            const has_eaten = part.x == food_x && part.y == food_y
+            if (has_eaten) foodGen()
+        })
+    }
+
+    function move() {
+        const head = {x: snake[0].x + dx, y: snake[0].y + dy}
+        snake.unshift(head)
+        const has_eaten_food = snake[0].x === food_x && snake[0].y === food_y
+        if (has_eaten_food) {
+            
+            score++
+            document.getElementById('score').innerHTML = score
+            foodGen()
+
+        }
+        else snake.pop()
+    }
+
+</script>
